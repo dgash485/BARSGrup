@@ -4,75 +4,24 @@ using System.IO;
 
 namespace Logger
 {
+    
+
     class DailyLogger : ILog
     {
-        private string _logsPath;
-        private string _infoFile = "info.log";
-        private string _errorFile = "error.log";
+        private const string _infoFile = "info.log";
+        private const string _errorFile = "error.log";
+        private readonly string _logsPath;
         private List<string> _uniqueWarnings = new List<string>();
         private List<string> _uniqueErrors = new List<string>();
         private string _todayDirectoryPath;
-
-        private bool TodayDirectoryExists()
+        private enum MessageCategory
         {
-            return Directory.Exists(_todayDirectoryPath);
-        }
-
-        private void CreateTodayDirectory()
-        {
-            _todayDirectoryPath = $"{_logsPath}\\{DateTime.Today:yyyy-MM-dd}";
-            Directory.CreateDirectory(_todayDirectoryPath);
-            _uniqueErrors.Clear();
-            _uniqueWarnings.Clear();
-        }
-
-        private void Write(string fileName, string message, string category)
-        {
-            var filePath = $"{_todayDirectoryPath}\\{fileName}";
-
-            using (var logFile = File.AppendText(filePath))
-            {
-                logFile.WriteLine($"{DateTime.Now} ({category.ToUpper()}): {message}");
-            } 
-        }
-
-        private void Write(string fileName, string message, string category, Exception ex)
-        {
-            var filePath = $"{_todayDirectoryPath}\\{fileName}";
-
-            using (var logFile = File.AppendText(filePath))
-            {
-                logFile.WriteLine($"{DateTime.Now} ({category.ToUpper()}): {message}, Exception: {ex.Message}");
-            }
-        }
-
-        private void Write(string fileName, string message, string category, params object[] args)
-        {
-            var filePath = $"{_todayDirectoryPath}\\{fileName}";
-
-            using (var logFile = File.AppendText(filePath))
-            {
-                var formatted = String.Format(message, args);
-                logFile.WriteLine($"{DateTime.Now} ({category.ToUpper()}): {formatted}");
-            }
-        }
-
-        private void Write(string fileName, string message, string category, Dictionary<object, object> properties)
-        {
-            var filePath = $"{_todayDirectoryPath}\\{fileName}";
-
-            using (var logFile = File.AppendText(filePath))
-            {
-                logFile.WriteLine($"{DateTime.Now} ({category.ToUpper()}): {message}");
-
-                if (properties != null)
-                {
-                    foreach (var property in properties)
-                    {
-                        logFile.WriteLine($"\t{property.Key}: {property.Value}");
-                    }
-                }
-            }
+            Debug,
+            Error,
+            Fatal,
+            Info,
+            SystemInfo,
+            Warning
         }
 
         public DailyLogger(string logsPath)
@@ -82,159 +31,132 @@ namespace Logger
 
         public void Debug(string message)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_infoFile, message, "debug");
+            Write(_infoFile, message, MessageCategory.Debug);
         }
 
         public void Debug(string message, Exception e)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_infoFile, message, "debug", e);
+            Write(_infoFile, message, MessageCategory.Debug, ex: e);
         }
 
         public void DebugFormat(string message, params object[] args)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_infoFile, message, "debug", args);
+            Write(_infoFile, message, MessageCategory.Debug, args: args);
         }
 
         public void Error(string message)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_errorFile, message, "error");
+            Write(_errorFile, message, MessageCategory.Error);
         }
 
         public void Error(string message, Exception e)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_errorFile, message, "error", e);
+            Write(_errorFile, message, MessageCategory.Error, ex: e);
         }
 
         public void Error(Exception ex)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_errorFile, "", "error", ex);
+            Write(_errorFile, "", MessageCategory.Error, ex: ex);
         }
 
         public void ErrorUnique(string message, Exception e)
         {
             if(!_uniqueErrors.Contains(message))
             {
-                Write(_errorFile, message, "unique error", e);
+                Write(_errorFile, message, MessageCategory.Error, true, e);
                 _uniqueErrors.Add(message);
             }
         }
 
         public void Fatal(string message)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_errorFile, message, "fatal");
+            Write(_errorFile, message, MessageCategory.Fatal);
         }
 
         public void Fatal(string message, Exception e)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_errorFile, message, "fatal", e);
+            Write(_errorFile, message, MessageCategory.Fatal, ex: e);
         }
 
         public void Info(string message)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_infoFile, message, "info");
+            Write(_infoFile, message, MessageCategory.Info);
         }
 
         public void Info(string message, Exception e)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_infoFile, message, "info", e);
+            Write(_infoFile, message, MessageCategory.Info, ex: e);
         }
 
         public void Info(string message, params object[] args)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_infoFile, message, "info", args);
+            Write(_infoFile, message, MessageCategory.Info, args: args);
         }
 
         public void SystemInfo(string message, Dictionary<object, object> properties = null)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_infoFile, message, "system info", properties);
+            Write(_infoFile, message, MessageCategory.SystemInfo, properties: properties);
         }
 
         public void Warning(string message)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_infoFile, message, "warning");
+            Write(_infoFile, message, MessageCategory.Warning);
         }
 
         public void Warning(string message, Exception e)
         {
-            if (!TodayDirectoryExists())
-            {
-                CreateTodayDirectory();
-            }
-
-            Write(_infoFile, message, "warning", e);
+            Write(_infoFile, message, MessageCategory.Warning, ex: e);
         }
 
         public void WarningUnique(string message)
         {
             if (!_uniqueWarnings.Contains(message))
             {
-                Write(_infoFile, message, "warning unique");
+                Write(_infoFile, message, MessageCategory.Warning, true);
                 _uniqueWarnings.Add(message);
+            }
+        }
+
+        private void Write(string fileName, string message, MessageCategory category, bool isUnique = false,
+                           Exception ex = null, Dictionary<object, object> properties = null, params object[] args)
+        {
+            _todayDirectoryPath = $"{_logsPath}\\{DateTime.Today:yyyy-MM-dd}";
+            if (Directory.Exists(_todayDirectoryPath))
+            {
+                Directory.CreateDirectory(_todayDirectoryPath);
+                _uniqueErrors.Clear();
+                _uniqueWarnings.Clear();
+            }
+
+            var filePath = $"{_todayDirectoryPath}\\{fileName}";
+
+            using (var logFile = File.AppendText(filePath))
+            {
+                string categoryToWrite = isUnique ? "UNIQUE" + category.ToString() : category.ToString();
+                logFile.WriteLine($"{DateTime.Now} ({categoryToWrite.ToUpper()}): {message}");
+                if (ex != null)
+                {
+                    logFile.WriteLine($"Exception: {ex.Message}");
+                    logFile.WriteLine($"Stack Trace: {ex.StackTrace}");
+                }
+
+                if (args.Length != 0)
+                {
+                    string arguments = "Arguments:";
+                    foreach(var arg in args)
+                    {
+                        arguments += " " + arg;
+                    }
+                    logFile.WriteLine(arguments);
+                }
+                
+                if (properties != null)
+                {
+                    foreach (var property in properties)
+                    {
+                        logFile.WriteLine($"\t{property.Key}: {property.Value}");
+                    }
+                }
             }
         }
     }
