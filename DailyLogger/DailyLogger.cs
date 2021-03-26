@@ -4,8 +4,9 @@ using System.IO;
 
 namespace Logger
 {
-    
-
+    /// <summary>
+    /// Класс логгера, реализующий интерфейс ILog
+    /// </summary>
     class DailyLogger : ILog
     {
         private const string _infoFile = "info.log";
@@ -117,6 +118,9 @@ namespace Logger
             }
         }
 
+        /// <summary>
+        /// Метод записи сообщения лога в соответствующий файл
+        /// </summary>
         private void Write(string fileName, string message, MessageCategory category, bool isUnique = false,
                            Exception ex = null, Dictionary<object, object> properties = null, params object[] args)
         {
